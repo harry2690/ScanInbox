@@ -50,7 +50,7 @@ struct ReceiverEvent: Decodable {
 @MainActor final class ScannerModel: ObservableObject {
     static let shared = ScannerModel()
     @Published var configuration = Configuration()
-    @Published var selected: String? = nil
+    @Published var selected: SidebarSelection? = .allHistory
     @Published var records: [ScanRecord] = []
     @Published var addresses: [Address] = []
     @Published var phase = "已停止"
@@ -77,7 +77,7 @@ struct ReceiverEvent: Decodable {
     var logURL: URL { dataDirectory.appendingPathComponent("Logs/receiver.log") }
     var canChangeConfiguration: Bool { transfers.isEmpty && !busy }
     var serviceAlive: Bool { child != nil }
-    var selectedPrinter: Printer? { configuration.printers.first { $0.id == selected } }
+    var selectedPrinter: Printer? { configuration.printers.first { $0.id == selected?.printerID } }
     var enabledCount: Int { configuration.printers.filter(\.enabled).count }
     var loginAgentURL: URL { fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/LaunchAgents/tw.local.SharpScanner.login.plist") }
     var loginEnabled: Bool { SMAppService.mainApp.status == .enabled || fm.fileExists(atPath:loginAgentURL.path) }
@@ -90,7 +90,7 @@ struct ReceiverEvent: Decodable {
             do { configuration = try JSONDecoder().decode(Configuration.self, from: Data(contentsOf: configURL)); try validate(configuration); validSaved = true }
             catch { errorMessage = "設定讀取失敗，未自動啟動：\(error.localizedDescription)" }
         }
-        selected = configuration.printers.first?.id
+        selected = configuration.printers.first.map { .printer($0.id) } ?? .allHistory
         refreshAddresses()
         migrateExistingLoginPath()
         refreshLoginStatus()
@@ -135,7 +135,7 @@ struct ReceiverEvent: Decodable {
             try fm.setAttributes([.posixPermissions:0o600],ofItemAtPath:configURL.path)
             let wasAlive = serviceAlive
             configuration = next
-            if !next.printers.contains(where:{$0.id == selected}) { selected = next.printers.first?.id }
+            if let id = selected?.printerID, !next.printers.contains(where:{$0.id == id}) { selected = next.printers.first.map { .printer($0.id) } ?? .allHistory }
             lastErrors = lastErrors.intersection(Set(next.printers.map(\.id)))
             if wasAlive { restart = enabledCount > 0; stopChild() }
             loadHistory()
@@ -150,7 +150,7 @@ struct ReceiverEvent: Decodable {
         clean.directory = URL(fileURLWithPath:(clean.directory as NSString).expandingTildeInPath).standardizedFileURL.path
         if let i = next.printers.firstIndex(where:{$0.id == clean.id}) { next.printers[i] = clean } else { next.printers.append(clean) }
         guard commit(next) else { return false }
-        selected = clean.id
+        selected = .printer(clean.id)
         return true
     }
     func removePrinter(_ id: String) -> Bool {

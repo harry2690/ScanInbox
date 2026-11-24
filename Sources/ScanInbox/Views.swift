@@ -12,7 +12,7 @@ struct ReceiverView: View {
     @State private var showLog = false
     @Environment(\.openWindow) private var openWindow
     private var displayed: [ScanRecord] {
-        model.records.filter { (model.selected == nil || $0.printerID == model.selected) && (search.isEmpty || $0.filename.localizedCaseInsensitiveContains(search) || $0.alias.localizedCaseInsensitiveContains(search)) }
+        model.records.filter { HistoryFilter.includes(printerID:$0.printerID,filename:$0.filename,alias:$0.alias,selection:model.selected,query:search) }
     }
     private var selection: ScanRecord? { displayed.first { selectedRecords.contains($0.id) } }
     private func statusColor(_ p: Printer) -> Color {
@@ -32,7 +32,7 @@ struct ReceiverView: View {
                                 HStack(spacing:5) { Circle().fill(statusColor(p)).frame(width:6,height:6); Text(model.state(for:p)).font(.caption).foregroundStyle(.secondary) }
                             }
                         } icon: { Image(systemName:"scanner") }
-                        .padding(.vertical,5).tag(p.id)
+                        .padding(.vertical,5).tag(SidebarSelection.printer(p.id))
                         .contextMenu {
                             Button("編輯設定") { editing = p }
                             Button(p.enabled ? "暫停這台印表機" : "啟用這台印表機") { model.togglePrinter(p.id) }.disabled(!model.canChangeConfiguration)
@@ -40,11 +40,11 @@ struct ReceiverView: View {
                         }
                     }
                 }
-                Section { Label("全部掃描紀錄",systemImage:"clock").tag(Optional<String>.none) }
+                Section { Label("全部掃描紀錄",systemImage:"clock").tag(SidebarSelection.allHistory) }
             }
             .navigationSplitViewColumnWidth(min:220,ideal:250,max:340)
             .safeAreaInset(edge:.bottom) {
-                Button { openWindow(id:"settings"); NSApp.activate(ignoringOtherApps:true) } label: { Label("共用設定",systemImage:"gearshape").frame(maxWidth:.infinity,alignment:.leading) }.buttonStyle(.plain).padding(18)
+                Button { WindowCoordinator.shared.showInDock(); openWindow(id:"settings"); NSApp.activate(ignoringOtherApps:true) } label: { Label("共用設定",systemImage:"gearshape").frame(maxWidth:.infinity,alignment:.leading) }.buttonStyle(.plain).padding(18)
             }
         } detail: {
             VStack(alignment:.leading,spacing:18) {
@@ -66,7 +66,7 @@ struct ReceiverView: View {
                     TableColumn("檔案名稱") { record in
                         VStack(alignment:.leading,spacing:3) {
                             Text(record.filename).lineLimit(1)
-                            if model.selected == nil { Text(record.alias).font(.caption).foregroundStyle(.secondary) }
+                            if model.selected?.printerID == nil { Text(record.alias).font(.caption).foregroundStyle(.secondary) }
                         }.help(record.error.isEmpty ? record.path : record.error)
                     }
                     TableColumn("大小") { record in Text(record.succeeded ? ByteCountFormatter.string(fromByteCount:record.size,countStyle:.file) : "—") }.width(80)

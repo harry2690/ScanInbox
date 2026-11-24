@@ -10,7 +10,7 @@ This is an independently developed project, not an official SHARP product. Origi
 
 - Multiple printers, each with its own source IP address, alias, and output folder.
 - Automatic detection of IPv4 addresses across multiple Mac network interfaces, with reception on multiple interfaces simultaneously.
-- Menu bar operation, per-printer pause, service start/stop controls, and optional launch at login.
+- Menu bar operation, Dock and Command+Tab access while a window is open, per-printer pause, service controls, and optional launch at login.
 - Scan history, filename and alias search, Finder reveal, and error details.
 - Connections accepted only from enabled printer IP addresses; downloads and overwriting existing files are blocked.
 
@@ -77,9 +77,11 @@ Standard FTP and Desktop destination fields and registration procedures may diff
 | All Scan History | Show results from all printers |
 | Pause / enable a printer | Control whether that printer may upload |
 | Stop Receiver Service | Pause reception from all sources while retaining settings |
-| Close the management window | Keep the app running in the menu bar without stopping reception |
+| Close the last app window | Hide the Dock icon while keeping menu bar reception running |
 | Remove a printer | Remove only its configuration; keep scanned files and historical records |
 | Show in Finder | Locate a successfully received file that still exists |
+
+While an app window is open, ScanInbox appears in the Dock and Command+Tab switcher. Minimized windows remain accessible. Closing the last app window hides its Dock icon; reopen the management window from the menu bar.
 
 “Ready” means the receiver is prepared to accept uploads, not that the printer has been detected online. Settings that require a service restart cannot be applied during a transfer. Save is also disabled when nothing has changed or required input is incomplete.
 
