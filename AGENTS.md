@@ -20,6 +20,12 @@ Read README.md for user-facing behavior, docs/USAGE.md for network and storage b
 - Tests: local receiver and packaging tests.
 - config/*.example.json: public examples, without personal defaults.
 
+## Dependency maintenance
+
+The supported Python runtime uses three pinned, vendored distributions: pyftpdlib 2.1.0 (FTP core), pyasyncore 1.0.5 (asyncore compatibility), and pyasynchat 1.0.5 (asynchat compatibility). pyasynchat also requires pyasyncore >= 1.0.2. Use requirements.txt and Receiver/vendor/*.dist-info/METADATA as the source of truth. Python itself is external; sqlite3 is a standard-library module, and Apple frameworks are not pip dependencies.
+
+Read docs/DEPENDENCIES_EN.md before dependency changes. Updating requirements.txt alone does not update the running app. Update the reviewed vendor snapshot and licenses together, remove obsolete versions, update both READMEs and dependency guides, run receiver/packaging tests on each supported Python version, rebuild, and verify the signed app after execution. Do not install into an already signed bundle or upgrade dependencies merely because a new version exists. Preserve a coherent rollback without touching user settings, history, or scanned files.
+
 ## Names and backward compatibility
 
 Use ScanInbox for the product name, executable, app bundle filename, source directory, UI labels, and release artifacts.

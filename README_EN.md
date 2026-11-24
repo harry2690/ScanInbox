@@ -32,6 +32,20 @@ brew install python@3.13
 
 The receiver packages are included. You do not need to run pip separately to use the app.
 
+## Third-party dependencies and runtime
+
+| Package / environment | Version or requirement | Role | Delivery / license |
+|---|---|---|---|
+| [pyftpdlib](https://github.com/giampaolo/pyftpdlib) | 2.1.0 | FTP receiver, active/passive data connections, authorization, and filesystem hooks | Bundled; MIT |
+| [pyasyncore](https://github.com/simonrob/pyasyncore) | 1.0.5 | asyncore-compatible event loop used by the receiver | Bundled; PSF License v2, subject to the complete original notices |
+| [pyasynchat](https://github.com/simonrob/pyasynchat) | 1.0.5 | asynchat-compatible asynchronous communication layer; depends on pyasyncore | Bundled; PSF License v2, subject to the complete original notices |
+| Python | Homebrew 3.13 or 3.14 | Runs the receiver; sqlite3, json, and similar modules come from the standard library | Installed separately; not embedded |
+| Apple system frameworks | macOS 27 SDK / runtime | SwiftUI, AppKit, Combine, Foundation, ServiceManagement, and SystemConfiguration | Supplied by Apple's SDK and macOS; not pip packages |
+
+Python versions are pinned in `requirements.txt`; the actual copies used by the app live in `Receiver/vendor`. The bootstrap prioritizes those copies. **Changing requirements.txt or upgrading system pip packages alone does not update the receiver bundled in the app.** Maintenance must update the pins, vendored files, and license metadata together, followed by testing and rebuilding.
+
+See the [dependency maintenance guide](docs/DEPENDENCIES_EN.md) for the dependency graph, upgrade procedure, and rollback instructions, and [third-party notices](THIRD_PARTY_NOTICES.md) for the original licenses.
+
 ## Installation and your first scan
 
 1. Obtain the ScanInbox app, or build it from source using the instructions below. Place it in a permanent application location and open it.

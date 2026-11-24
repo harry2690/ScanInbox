@@ -32,6 +32,20 @@ brew install python@3.13
 
 接收套件已隨附，使用 App 不需要另外執行 pip。
 
+## 第三方套件與執行環境
+
+| 套件／環境 | 版本或需求 | 用途 | 提供方式／授權 |
+|---|---|---|---|
+| [pyftpdlib](https://github.com/giampaolo/pyftpdlib) | 2.1.0 | FTP 接收核心、主動／被動資料連線、權限與檔案系統介面 | 隨 App 附帶；MIT |
+| [pyasyncore](https://github.com/simonrob/pyasyncore) | 1.0.5 | 為接收核心提供 asyncore 相容事件迴圈 | 隨 App 附帶；PSF License v2，完整聲明以原檔為準 |
+| [pyasynchat](https://github.com/simonrob/pyasynchat) | 1.0.5 | 為接收核心提供 asynchat 非同步通訊相容層，依賴 pyasyncore | 隨 App 附帶；PSF License v2，完整聲明以原檔為準 |
+| Python | Homebrew 3.13 或 3.14 | 執行接收核心；sqlite3、json 等使用標準函式庫 | 使用者另外安裝，未內嵌 |
+| Apple 系統框架 | macOS 27 SDK／執行系統 | SwiftUI、AppKit、Combine、Foundation、ServiceManagement、SystemConfiguration | 由 Apple SDK 與 macOS 提供，非 pip 套件 |
+
+Python 套件版本固定於 `requirements.txt`，實際使用的副本在 `Receiver/vendor`。App 透過 bootstrap 優先載入這份副本，**只修改 requirements.txt 或升級電腦上的 pip 套件不會更新 App 內的接收核心**。維護時必須同步套件版本、副本及授權資料，重新測試與打包。
+
+完整相依關係、更新與回復步驟見 [套件維護指南](docs/DEPENDENCIES.md)；原始授權見 [第三方聲明](THIRD_PARTY_NOTICES.md)。
+
 ## 安裝與第一次掃描
 
 1. 取得 ScanInbox App，或依下方步驟從原始碼建置，放到固定的應用程式位置後開啟。
