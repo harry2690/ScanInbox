@@ -1,0 +1,44 @@
+ScanInbox Personal Noncommercial Use License v1.0
+SPDX-License-Identifier: LicenseRef-ScanInbox-Personal-NonCommercial-1.0
+
+Language: [繁體中文](LICENSE) | [English](LICENSE_EN)
+
+Copyright in this project's source code and documentation belongs to the respective copyright holders.
+This license applies to the original ScanInbox code, documentation, and compiled artifacts made available by the copyright holders under these terms (the "Software"). It does not apply to third-party components distributed under separate licenses.
+
+1. Grant of rights
+Subject to compliance with these terms, the copyright holders grant natural persons who obtain the Software a nonexclusive, free-of-charge right to use, read, copy, study, and modify it for personal and noncommercial purposes.
+Users may redistribute the Software, whether modified or unmodified, free of charge, subject to Section 4. All rights not expressly granted under these terms are reserved by their respective rights holders.
+
+2. Personal use
+"Personal use" means use by a natural person in an individual capacity for private life, personal learning, or nonprofit individual research.
+This license does not cover use by companies, government bodies, schools, associations, or other organizations. It also does not cover employment-related work, the performance of professional duties, internal organizational operations, business workflows, or services provided to others, even if no fee is charged directly.
+
+3. Commercial use prohibited
+Without separate written permission from the relevant copyright holders, the Software must not be used, modified, or distributed, directly or indirectly, for commercial purposes, including:
+1. Selling, renting, or licensing the Software or modified versions for a fee.
+2. Integrating, packaging, or bundling the Software with paid products, services, equipment, or subscription plans.
+3. Using the Software to provide paid scanning, hosting, deployment, maintenance, consulting, or other services.
+4. Using the Software for business operations, advertising monetization, business promotion, or other commercial benefit.
+Redistributing it under another name, providing only executables, or modifying part of the code does not remove these restrictions.
+
+4. Copying, modification, and redistribution
+When copying or redistributing the Software or modified versions free of charge, you must:
+1. Preserve this license, existing copyright notices, and third-party notices.
+2. Clearly identify modified versions as modified, and not falsely represent them as versions provided by the original authors or officially by SHARP.
+3. Not claim that recipients have rights beyond those granted by this license, and not remove the personal and noncommercial use restrictions.
+These terms do not require publication of private modifications. However, the restrictions above continue to apply when those modifications are redistributed.
+
+5. Third-party components and trademarks
+Third-party components are governed by their accompanying license terms. This license does not modify, diminish, or replace the rights granted under those licenses. Independent use of third-party components is governed by their original licenses.
+SHARP, the Sharp name, and related trademarks belong to Sharp Corporation and/or its affiliates or other lawful rights holders. These names are used only to identify compatible equipment. No trademark rights are granted, and their use does not imply an official relationship, certification, sponsorship, or endorsement of this project.
+
+6. No warranties; limitation of liability
+The Software is provided "as is." To the extent permitted by law, the copyright holders and providers make no express or implied warranties, including warranties of fitness for a particular purpose, merchantability, noninfringement, compatibility, or data integrity.
+To the extent permitted by law, the copyright holders and providers are not liable for data loss, damage, claims, or other liability arising from the use, inability to use, or distribution of the Software.
+
+7. Termination and other permissions
+A violation of these terms terminates the rights granted under this license. Users must cease use and distribution beyond the scope of the license. Mandatory provisions of applicable law prevail where applicable.
+Copyright holders may separately grant written permission. Anyone holding another valid license may use the Software according to that license's terms.
+
+This is a custom personal noncommercial use license. It is not the MIT License and is not represented as meeting the Open Source Initiative's definition of open source.

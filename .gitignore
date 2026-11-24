@@ -1,0 +1,56 @@
+# 建置及發佈產物
+.build/
+dist/
+build-cache/
+*.app/
+*.dmg
+*.pkg
+*.zip
+*.dSYM/
+
+# Python／編輯器
+__pycache__/
+*.py[cod]
+.venv*/
+venv/
+.DS_Store
+.idea/
+.vscode/
+xcuserdata/
+*.xcuserstate
+
+# 僅限本機的開發與發佈設定
+config/*.local.json
+*.local.env
+.env
+.env.*
+!.env.example
+
+# 執行資料與掃描紀錄（公開範例使用 *.example.json）
+settings.json
+history.sqlite3*
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.log
+Logs/
+scans/
+captures/
+*.pcap
+*.pcapng
+
+# 簽署私鑰、匯出憑證與帳號設定
+private/
+credentials/
+*.p12
+*.pfx
+*.p8
+*.key
+*.pem
+*.cer
+*.der
+*.keychain
+*.keychain-db
+*.mobileprovision
+*.provisionprofile

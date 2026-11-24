@@ -1,0 +1,7 @@
+{
+  "printers": [],
+  "port": 4687,
+  "autoReceive": true,
+  "retentionDays": 30,
+  "diagnostic": false
+}
