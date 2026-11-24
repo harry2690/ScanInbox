@@ -215,7 +215,7 @@ struct ReceiverEvent: Decodable {
                 if let record = event.record {
                     records.removeAll { $0.id == record.id }; records.insert(record,at:0)
                     if records.count > 5000 { records.removeLast(records.count - 5000) }
-                    if record.succeeded { lastErrors.remove(record.printerID) } else { lastErrors.insert(record.printerID) }
+                    if record.succeeded { lastErrors.remove(record.printerID); ReceiptStatusController.shared.received(id:record.id, printerID:record.printerID, alias:record.alias) } else { lastErrors.insert(record.printerID) }
                 }
             case "error": phase = "接收服務發生錯誤"; fail(event.message ?? "未知接收錯誤")
             default: break

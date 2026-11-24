@@ -34,3 +34,15 @@ enum WindowVisibilityRules {
         windows.contains { !$0.closing && ($0.visible || $0.minimized) }
     }
 }
+
+// Bound deduplication memory while ignoring repeated live completion events.
+struct ReceiptBatch {
+    private var seen = Set<String>()
+    private var order: [String] = []
+    mutating func accept(_ id:String) -> Bool {
+        guard seen.insert(id).inserted else { return false }
+        order.append(id)
+        if order.count > 5000 { seen.remove(order.removeFirst()) }
+        return true
+    }
+}

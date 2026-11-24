@@ -130,3 +130,7 @@ The app, executable, and development directory use ScanInbox (`Sources/ScanInbox
 Original code and documentation are provided under the [ScanInbox Personal Noncommercial Use License](LICENSE_EN). This is not the MIT License and is not represented as an open-source license meeting the OSI definition. Refer to the full license for the conditions governing personal use, modification, and free redistribution.
 
 SHARP, the Sharp name, and related trademarks belong to Sharp Corporation and/or its affiliates or other lawful rights holders. These names are used only to identify compatible equipment. This project is not an official SHARP product and has not been certified, sponsored, or endorsed by SHARP. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the complete notices and third-party licenses; that document is currently in Traditional Chinese.
+
+### Receipt bubbles
+
+After a successful scan upload, a bubble below the menu bar icon shows the printer alias and file count. Consecutive uploads from the same printer update the count, and the bubble closes about five seconds after the last update. Other printers are shown in sequence. Only new successful uploads trigger bubbles; loading history does not. The count refers to files, not document pages.

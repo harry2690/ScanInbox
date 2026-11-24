@@ -66,7 +66,7 @@ def main():
     info = {
         "CFBundleExecutable": "ScanInbox", "CFBundleIdentifier": "tw.local.SharpScanner",
         "CFBundleName": "ScanInbox", "CFBundleDisplayName": "ScanInbox",
-        "CFBundlePackageType": "APPL", "CFBundleShortVersionString": "0.3.3", "CFBundleVersion": "33",
+        "CFBundlePackageType": "APPL", "CFBundleShortVersionString": "0.3.4", "CFBundleVersion": "34",
         "CFBundleIconFile": "AppIcon.icns",
         "LSMinimumSystemVersion": "27.0", "LSUIElement": True, "NSHighResolutionCapable": True,
         "NSHumanReadableCopyright": "ScanInbox 採個人非商業使用授權。SHARP 商標屬其權利人；本軟體非官方產品。",

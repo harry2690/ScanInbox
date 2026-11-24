@@ -25,6 +25,10 @@ import Foundation
         expect(WindowVisibilityRules.shouldShowDock([WindowPresence(visible:false,minimized:true,closing:false)]), "Minimized windows must remain accessible")
         expect(!WindowVisibilityRules.shouldShowDock([WindowPresence(visible:true,minimized:false,closing:true)]), "Closing the last window must hide Dock before isVisible updates")
         expect(WindowVisibilityRules.shouldShowDock([WindowPresence(visible:true,minimized:false,closing:true),WindowPresence(visible:true,minimized:false,closing:false)]), "Closing one window must not hide another visible window")
+        var receipts = ReceiptBatch()
+        expect(receipts.accept("first"), "New completion must notify")
+        expect(!receipts.accept("first"), "Repeated completion must not notify twice")
+        expect(receipts.accept("second"), "Another completed file must notify")
         print("Navigation and window policy: \(checks) checks passed")
     }
 }
