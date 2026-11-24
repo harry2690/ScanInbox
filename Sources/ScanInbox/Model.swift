@@ -69,6 +69,8 @@ struct ReceiverEvent: Decodable {
     private var intentionalStop = false
     private var terminating = false
     private var timer: Timer?
+    @Published private(set) var deletingRecordIDs = Set<String>()
+    private var deletedRecordIDs = Set<String>()
     private var historyRequest = 0
     private var lastHistoryRefresh = Date.distantPast
     private let fm = FileManager.default
@@ -212,7 +214,7 @@ struct ReceiverEvent: Decodable {
             case "receiving": if let transfer = event.transferID, let id = event.printerID { transfers[transfer] = id }
             case "transferEnded": if let transfer = event.transferID { transfers.removeValue(forKey:transfer) }
             case "record":
-                if let record = event.record {
+                if let record = event.record, !deletedRecordIDs.contains(record.id) {
                     records.removeAll { $0.id == record.id }; records.insert(record,at:0)
                     if records.count > 5000 { records.removeLast(records.count - 5000) }
                     if record.succeeded { lastErrors.remove(record.printerID); ReceiptStatusController.shared.received(id:record.id, printerID:record.printerID, alias:record.alias) } else { lastErrors.insert(record.printerID) }
@@ -270,7 +272,7 @@ struct ReceiverEvent: Decodable {
                 Task { @MainActor in
                     guard let self, self.historyRequest == request else { return }
                     // 與讀取期間新進的結果合併，避免非同步查詢覆蓋剛收到的事件。
-                    var merged = Dictionary(uniqueKeysWithValues:loaded.map { ($0.id,$0) })
+                    var merged = Dictionary(uniqueKeysWithValues:loaded.filter { !self.deletedRecordIDs.contains($0.id) }.map { ($0.id,$0) })
                     let cutoff = days > 0 ? Date().timeIntervalSince1970 - Double(days)*86400 : 0
                     for r in self.records where r.time >= cutoff { merged[r.id] = r }
                     self.records = Array(merged.values.sorted { $0.time > $1.time }.prefix(5000))
@@ -353,8 +355,59 @@ struct ReceiverEvent: Decodable {
         } catch { refreshLoginStatus(); fail("接收設定已儲存，但登入啟動未完成：\(error.localizedDescription)") }
     }
     func openFolder(_ path: String) { NSWorkspace.shared.open(URL(fileURLWithPath:path)) }
-    func reveal(_ record: ScanRecord) {
-        guard fm.fileExists(atPath:record.path) else { fail("檔案已搬移、刪除或未成功接收。"); return }
-        NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath:record.path)])
+    func openFile(_ record: ScanRecord) {
+        guard record.succeeded else { fail("這筆紀錄未成功接收檔案。"); return }
+        guard fm.fileExists(atPath:record.path) else {
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = "檔案已移動或刪除，是否刪除這筆紀錄？"
+            alert.informativeText = "找不到「\(record.filename)」。刪除紀錄只會移除掃描歷史，不會刪除任何實際檔案。"
+            alert.addButton(withTitle:"保留")
+            let deleteButton = alert.addButton(withTitle:"刪除")
+            deleteButton.hasDestructiveAction = true
+            if alert.runModal() == .alertSecondButtonReturn { deleteRecords([record.id]) }
+            return
+        }
+        if !NSWorkspace.shared.open(URL(fileURLWithPath:record.path)) { fail("無法開啟檔案，請確認已安裝可開啟此類檔案的應用程式。") }
+    }
+    func openContainingFolder(_ record: ScanRecord) {
+        let file = URL(fileURLWithPath:record.path)
+        if fm.fileExists(atPath:record.path) {
+            NSWorkspace.shared.activateFileViewerSelecting([file])
+        } else {
+            let folder = file.deletingLastPathComponent()
+            guard fm.fileExists(atPath:folder.path) else { fail("檔案所在資料夾已搬移或刪除。"); return }
+            if !NSWorkspace.shared.open(folder) { fail("無法開啟檔案所在資料夾。") }
+        }
+    }
+    func deleteRecords(_ ids:Set<String>) {
+        let targets = ids.subtracting(deletingRecordIDs).intersection(Set(records.map(\.id)))
+        guard !targets.isEmpty else { return }
+        guard let python = pythonURL(), let script = bootstrap else { fail("找不到接收核心，無法刪除紀錄。"); return }
+        deletingRecordIDs.formUnion(targets)
+        let directory = dataDirectory.path
+        DispatchQueue.global(qos:.utility).async { [weak self] in
+            let task = Process()
+            task.executableURL = python
+            task.arguments = ["-I","-B",script.path,"--data-dir",directory,"--delete-record"] + targets.sorted()
+            task.standardOutput = FileHandle.nullDevice; task.standardError = FileHandle.nullDevice; task.standardInput = FileHandle.nullDevice
+            do {
+                try task.run(); task.waitUntilExit()
+                let succeeded = task.terminationStatus == 0
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.deletingRecordIDs.subtract(targets)
+                    guard succeeded else { self.fail("刪除紀錄失敗，請稍後再試；原始檔案未變更。"); return }
+                    self.deletedRecordIDs.formUnion(targets)
+                    self.records.removeAll { targets.contains($0.id) }
+                    self.loadHistory()
+                }
+            } catch {
+                Task { @MainActor in
+                    self?.deletingRecordIDs.subtract(targets)
+                    self?.fail("刪除紀錄失敗：\(error.localizedDescription)")
+                }
+            }
+        }
     }
 }

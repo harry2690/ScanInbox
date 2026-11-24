@@ -9,12 +9,14 @@ struct ReceiverView: View {
     @State private var search = ""
     @State private var editing: Printer?
     @State private var selectedRecords = Set<String>()
+    @State private var sortOrder = [KeyPathComparator(\ScanRecord.time, order:.reverse)]
     @State private var showLog = false
     @Environment(\.openWindow) private var openWindow
     private var displayed: [ScanRecord] {
         model.records.filter { HistoryFilter.includes(printerID:$0.printerID,filename:$0.filename,alias:$0.alias,selection:model.selected,query:search) }
+            .sorted(using:sortOrder + [KeyPathComparator(\ScanRecord.time,order:.reverse), KeyPathComparator(\ScanRecord.id)])
     }
-    private var selection: ScanRecord? { displayed.first { selectedRecords.contains($0.id) } }
+
     private func statusColor(_ p: Printer) -> Color {
         if !p.enabled || !model.running { return .secondary }
         if model.lastErrors.contains(p.id) { return .orange }
@@ -61,22 +63,31 @@ struct ReceiverView: View {
                 }
                 Divider()
                 HStack { Text("掃描紀錄").font(.headline); Spacer(); Text("\(displayed.count) 筆").font(.caption).foregroundStyle(.secondary) }
-                Table(displayed,selection:$selectedRecords) {
-                    TableColumn("時間") { record in Text(record.date.formatted(.dateTime.month().day().hour().minute())).monospacedDigit() }.width(min:100,ideal:120)
-                    TableColumn("檔案名稱") { record in
+                Table(displayed,selection:$selectedRecords,sortOrder:$sortOrder) {
+                    TableColumn("時間",value:\.time) { record in Text(record.date.formatted(.dateTime.month().day().hour().minute())).monospacedDigit() }.width(min:100,ideal:120)
+                    TableColumn("檔案名稱",value:\.filename,comparator:.localizedStandard) { record in
                         VStack(alignment:.leading,spacing:3) {
                             Text(record.filename).lineLimit(1)
                             if model.selected?.printerID == nil { Text(record.alias).font(.caption).foregroundStyle(.secondary) }
                         }.help(record.error.isEmpty ? record.path : record.error)
                     }
-                    TableColumn("大小") { record in Text(record.succeeded ? ByteCountFormatter.string(fromByteCount:record.size,countStyle:.file) : "—") }.width(80)
+                    TableColumn("大小",value:\.size) { record in Text(record.succeeded ? ByteCountFormatter.string(fromByteCount:record.size,countStyle:.file) : "—") }.width(80)
                     TableColumn("結果") { record in Label(record.succeeded ? "成功" : "未完成",systemImage:record.succeeded ? "checkmark.circle" : "exclamationmark.circle").foregroundStyle(record.succeeded ? .green : .orange).help(record.error) }.width(95)
                 }.tableStyle(.inset)
                 .overlay { if displayed.isEmpty { ContentUnavailableView(search.isEmpty ? "尚無掃描紀錄" : "找不到符合的紀錄",systemImage:"doc.text.magnifyingglass",description:Text(search.isEmpty ? "開始接收後，結果會顯示在這裡。" : "請嘗試其他檔名。")) } }
-                .contextMenu {
-                    Button("在 Finder 中顯示") { if let record = selection { model.reveal(record) } }.disabled(selection == nil || selection?.succeeded != true)
-                    Button("查看結果詳細資料") { if let r = selection { model.fail(r.error.isEmpty ? "\(r.filename)\n\(r.path)\n傳輸完成；文件內容請開啟確認。" : "\(r.filename)\n\(r.error)") } }.disabled(selection == nil)
+                .contextMenu(forSelectionType:String.self) { ids in
+                    let targets = displayed.filter { ids.contains($0.id) }
+                    if !targets.isEmpty {
+                        Button("開啟檔案",systemImage:"doc") { targets.forEach { model.openFile($0) } }
+                            .disabled(!targets.allSatisfy { $0.succeeded })
+                        Button("開啟檔案所在資料夾",systemImage:"folder") { targets.forEach { model.openContainingFolder($0) } }
+                        Button("刪除紀錄",systemImage:"trash",role:.destructive) { model.deleteRecords(Set(targets.map(\.id))) }
+                            .disabled(!model.deletingRecordIDs.isDisjoint(with:ids))
+                    }
+                } primaryAction: { ids in
+                    for record in displayed where ids.contains(record.id) && record.succeeded { model.openFile(record) }
                 }
+
                 HStack {
                     Label(model.phase,systemImage:model.running ? "circle.fill" : "pause.circle").foregroundStyle(model.running ? .green : .secondary)
                     Spacer()

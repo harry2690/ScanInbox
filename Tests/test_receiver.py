@@ -46,6 +46,27 @@ class ReceiverTests(unittest.TestCase):
             f.close()
         self.temp.cleanup()
 
+    def test_delete_history_persists_without_deleting_files(self):
+        self.root_a.mkdir()
+        file = self.root_a / "scan.pdf"
+        file.write_bytes(b"preserved document")
+        history = receiver.History(self.state)
+        first = history.add(self.config["printers"][0], file, file.stat().st_size, "success")
+        second = history.add(self.config["printers"][0], file, 0, "failed", "test")
+        # An independent command must safely update the live receiver's WAL database.
+        result = subprocess.run([sys.executable, "-I", str(ROOT / "Receiver/bootstrap.py"),
+            "--data-dir", str(self.state), "--delete-record", first["id"], "missing' OR 1=1 --"],
+            capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([row["id"] for row in history.read(0)], [second["id"]])
+        history.db.close()
+        reopened = receiver.History(self.state)
+        self.assertEqual([row["id"] for row in reopened.read(0)], [second["id"]])
+        reopened.delete([second["id"], first["id"]])
+        self.assertEqual(reopened.read(0), [])
+        reopened.db.close()
+        self.assertEqual(file.read_bytes(), b"preserved document")
+
     def start(self):
         self.config_path.write_text(json.dumps(self.config))
         self.handles = [self.out.open("w"), self.err.open("w")]

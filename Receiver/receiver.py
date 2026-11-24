@@ -41,6 +41,11 @@ class History:
         emit("record", record=record)
         return record
 
+    def delete(self, ids):
+        # Delete history rows only; never touch the scanned files.
+        with self.db:
+            self.db.executemany("DELETE FROM scans WHERE id = ?", ((id,) for id in ids))
+
     def read(self, days):
         if days > 0:
             with self.db:
@@ -189,7 +194,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config")
     parser.add_argument("--data-dir", required=True)
-    parser.add_argument("--history", action="store_true")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--history", action="store_true")
+    mode.add_argument("--delete-record", nargs="+")
     parser.add_argument("--retention-days", type=int, default=30)
     parser.add_argument("--bind", default="0.0.0.0")
     args = parser.parse_args()
@@ -197,6 +204,9 @@ def main():
     state_dir = Path(args.data_dir).expanduser().resolve()
     history = History(state_dir)
     atexit.register(history.db.close)
+    if args.delete_record:
+        history.delete(args.delete_record)
+        return
     if args.history:
         print(json.dumps(history.read(args.retention_days), ensure_ascii=False))
         return
