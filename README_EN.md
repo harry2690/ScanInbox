@@ -140,3 +140,7 @@ After a successful scan upload, a bubble below the menu bar icon shows the print
 Double-click a scan record to open its file with the default application. Right-click for Open File, Open Containing Folder, or Delete Record. Deleting records removes history only and keeps the actual files. When multiple records are selected, actions apply to the selection. If a file has been moved or deleted, the app asks whether to delete its history record. Choose Keep or Delete.
 
 Click the Time, Filename, or Size column header to sort scan history; click again to reverse the order. The default is newest first. Filenames use natural ordering (for example, 2 before 10), and sizes are sorted by their byte counts. Search results and incoming records follow the current sort order.
+
+### Hiding windows and quitting
+
+Command+Q hides the management and shared settings windows and the Dock icon while background receiving continues. Unsaved settings remain in the hidden windows. Use Open Management Window or Shared Settings from the menu bar to show them again. To stop the background app, choose Quit ScanInbox from the menu bar; active transfers require confirmation before stopping.

@@ -25,6 +25,8 @@ import Foundation
         expect(WindowVisibilityRules.shouldShowDock([WindowPresence(visible:false,minimized:true,closing:false)]), "Minimized windows must remain accessible")
         expect(!WindowVisibilityRules.shouldShowDock([WindowPresence(visible:true,minimized:false,closing:true)]), "Closing the last window must hide Dock before isVisible updates")
         expect(WindowVisibilityRules.shouldShowDock([WindowPresence(visible:true,minimized:false,closing:true),WindowPresence(visible:true,minimized:false,closing:false)]), "Closing one window must not hide another visible window")
+        expect(!WindowVisibilityRules.shouldShowDock([WindowPresence(visible:true,minimized:false,closing:false)],hiddenToBackground:true), "Command-Q must hide Dock even before visibility notifications settle")
+        expect(!WindowVisibilityRules.shouldShowDock([WindowPresence(visible:false,minimized:true,closing:false)],hiddenToBackground:true), "A minimized window must not restore Dock after Command-Q")
         var receipts = ReceiptBatch()
         expect(receipts.accept("first"), "New completion must notify")
         expect(!receipts.accept("first"), "Repeated completion must not notify twice")

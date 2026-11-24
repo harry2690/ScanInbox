@@ -30,8 +30,8 @@ struct WindowPresence {
     var closing: Bool
 }
 enum WindowVisibilityRules {
-    static func shouldShowDock(_ windows: [WindowPresence]) -> Bool {
-        windows.contains { !$0.closing && ($0.visible || $0.minimized) }
+    static func shouldShowDock(_ windows: [WindowPresence], hiddenToBackground: Bool = false) -> Bool {
+        !hiddenToBackground && windows.contains { !$0.closing && ($0.visible || $0.minimized) }
     }
 }
 

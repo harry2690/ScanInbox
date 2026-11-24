@@ -6,6 +6,7 @@ import SwiftUI
     static let shared = WindowCoordinator()
     private let windows = NSHashTable<NSWindow>.weakObjects()
     private var closing = Set<ObjectIdentifier>()
+    private var hiddenToBackground = false
     private var observers: [NSObjectProtocol] = []
 
     private init() {
@@ -36,14 +37,22 @@ import SwiftUI
         showInDock()
         DispatchQueue.main.async { [weak self] in self?.refresh() }
     }
+    func hideManagementWindows() {
+        hiddenToBackground = true
+        // Order out rather than close so unsaved settings and sheets are preserved.
+        for window in windows.allObjects { window.orderOut(nil) }
+        NSApp.hide(nil)
+        NSApp.setActivationPolicy(.accessory)
+    }
     func showInDock() {
+        hiddenToBackground = false
         if NSApp.activationPolicy() != .regular { NSApp.setActivationPolicy(.regular) }
     }
     func refresh() {
         let presence = windows.allObjects.map {
             WindowPresence(visible:$0.isVisible,minimized:$0.isMiniaturized,closing:closing.contains(ObjectIdentifier($0)))
         }
-        let policy: NSApplication.ActivationPolicy = WindowVisibilityRules.shouldShowDock(presence) ? .regular : .accessory
+        let policy: NSApplication.ActivationPolicy = WindowVisibilityRules.shouldShowDock(presence,hiddenToBackground:hiddenToBackground) ? .regular : .accessory
         if NSApp.activationPolicy() != policy { NSApp.setActivationPolicy(policy) }
     }
 }
