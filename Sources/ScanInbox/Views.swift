@@ -137,7 +137,7 @@ struct PrinterEditor: View {
                         Button("選擇…") { chooseFolder() }.neutralGlass()
                     }
                 }
-                Toggle("啟用這台印表機",isOn:$draft.enabled).toggleStyle(.switch)
+                Toggle("啟用這台印表機",isOn:$draft.enabled).toggleStyle(GlassSwitchStyle())
             }.formStyle(.grouped)
             Text("別名僅供本機辨識，不會修改影印機通訊錄。移除設定不會刪除已掃描文件。").font(.caption).foregroundStyle(.secondary)
             if !model.transfers.isEmpty { Label("文件傳輸中，請等接收完成後再儲存。",systemImage:"info.circle").font(.caption).foregroundStyle(.orange) }
@@ -167,34 +167,65 @@ struct SharedSettings: View {
     @State private var port: String
     @State private var login: Bool
     @State private var localError: String?
+    @State private var startupExpanded = true
+    @State private var historyExpanded = true
+    @State private var networkExpanded = false
     @Environment(\.dismiss) private var dismiss
     init(model:ScannerModel) { self.model = model; _draft = State(initialValue:model.configuration); _port = State(initialValue:String(model.configuration.port)); _login = State(initialValue:model.loginEnabled) }
     private var changed: Bool { draft != model.configuration || port != String(model.configuration.port) || login != model.loginEnabled }
+    private func sectionHeading(_ title:String,expanded:Binding<Bool>) -> some View {
+        Button { withAnimation { expanded.wrappedValue.toggle() } } label: {
+            HStack(spacing:7) {
+                Image(systemName:expanded.wrappedValue ? "chevron.down" : "chevron.right").font(.caption.weight(.semibold)).frame(width:12)
+                Text(title).font(.headline)
+                Spacer()
+            }.contentShape(Rectangle())
+        }.buttonStyle(.plain).accessibilityLabel(title).accessibilityValue(expanded.wrappedValue ? "已展開" : "已收合")
+    }
     var body: some View {
         VStack(alignment:.leading,spacing:16) {
             Form {
                 Section {
-                    HStack { Text("自動偵測所有可用的網路介面"); Spacer(); Button("重新偵測",systemImage:"arrow.clockwise") { model.refreshAddresses() }.neutralGlass() }
-                    ForEach(model.addresses) { address in
-                        LabeledContent("\(address.name)（\(address.interface)）") { Text(address.ip).monospacedDigit().textSelection(.enabled); Text("可用").foregroundStyle(.green) }
+                    if startupExpanded {
+                        Toggle("登入 Mac 後啟動",isOn:$login).toggleStyle(GlassSwitchStyle())
+                        Toggle("程式啟動時開始接收",isOn:$draft.autoReceive).toggleStyle(GlassSwitchStyle())
                     }
-                    if model.addresses.isEmpty { Text("尚未偵測到可用的 IPv4 網路介面").foregroundStyle(.orange) }
-                    TextField("接收連接埠",text:$port)
-                } header: { Text("網路接收") } footer: { Text("自動監聽所有 IPv4 介面，只接受已啟用的印表機 IP。請在影印機目的地填入可連通的其中一個 Mac 位址；本程式不會自動修改通訊錄。") }
+                } header: { sectionHeading("啟動與常駐",expanded:$startupExpanded) } footer: {
+                    if startupExpanded { Text("僅在選單列常駐；Mac 休眠或登出時無法接收。登入啟動：\(model.loginStatus)") }
+                }
                 Section {
-                    Toggle("登入 Mac 後啟動",isOn:$login).toggleStyle(.switch)
-                    Toggle("程式啟動時開始接收",isOn:$draft.autoReceive).toggleStyle(.switch)
-                } header: { Text("啟動與常駐") } footer: { Text("僅在選單列常駐；Mac 休眠或登出時無法接收。登入啟動：\(model.loginStatus)") }
+                    if historyExpanded {
+                        Picker("紀錄保留期間",selection:$draft.retentionDays) { Text("30 天").tag(30); Text("90 天").tag(90); Text("1 年").tag(365); Text("不自動清除").tag(0) }
+                        Toggle("診斷記錄",isOn:$draft.diagnostic).toggleStyle(GlassSwitchStyle())
+                        HStack { Text("接收記錄檔"); Spacer(); Button("開啟記錄資料夾") { model.openFolder(model.dataDirectory.appendingPathComponent("Logs").path) }.buttonStyle(.glass) }
+                    }
+                } header: { sectionHeading("紀錄與診斷",expanded:$historyExpanded) } footer: {
+                    if historyExpanded { Text("保留期間只影響掃描紀錄，不刪除文件；最多顯示最新 5,000 筆。記錄可能包含檔名與 IP，分享前請遮蔽。") }
+                }
                 Section {
-                    Picker("紀錄保留期間",selection:$draft.retentionDays) { Text("30 天").tag(30); Text("90 天").tag(90); Text("1 年").tag(365); Text("不自動清除").tag(0) }
-                    Toggle("診斷記錄",isOn:$draft.diagnostic).toggleStyle(.switch)
-                    HStack { Text("接收記錄檔"); Spacer(); Button("開啟記錄資料夾") { model.openFolder(model.dataDirectory.appendingPathComponent("Logs").path) }.neutralGlass() }
-                } header: { Text("紀錄與診斷") } footer: { Text("保留期間只影響掃描紀錄，不刪除文件；最多顯示最新 5,000 筆。記錄可能包含檔名與 IP，分享前請遮蔽。") }
+                    if networkExpanded {
+                        HStack { Text("自動偵測所有可用的網路介面"); Spacer(); Button("重新偵測",systemImage:"arrow.clockwise") { model.refreshAddresses() }.buttonStyle(.glass) }
+                        ForEach(model.addresses) { address in
+                            LabeledContent("\(address.name)（\(address.interface)）") {
+                                Text(address.ip).monospacedDigit().textSelection(.enabled)
+                                Text("可用").foregroundStyle(.green)
+                                Button {
+                                    NSPasteboard.general.clearContents()
+                                    if !NSPasteboard.general.setString(address.ip,forType:.string) { localError = "無法複製 IP，請再試一次。" }
+                                } label: { Image(systemName:"doc.on.doc").frame(width:16,height:16) }.buttonStyle(.glass).help("複製 IP：\(address.ip)").accessibilityLabel("複製 \(address.name) 的 IP：\(address.ip)")
+                            }
+                        }
+                        if model.addresses.isEmpty { Text("尚未偵測到可用的 IPv4 網路介面").foregroundStyle(.orange) }
+                        TextField("接收連接埠",text:$port)
+                    }
+                } header: { sectionHeading("網路接收",expanded:$networkExpanded) } footer: {
+                    if networkExpanded { Text("自動監聽所有 IPv4 介面，只接受已啟用的印表機 IP。請在影印機目的地填入可連通的其中一個 Mac 位址；本程式不會自動修改通訊錄。") }
+                }
             }.formStyle(.grouped)
             HStack {
                 Text("儲存設定會重新啟動正在執行的接收服務。").font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Button("取消") { dismiss() }.neutralGlass().keyboardShortcut(.cancelAction)
+                Button("取消") { dismiss() }.buttonStyle(.glass).keyboardShortcut(.cancelAction)
                 Button("儲存設定") {
                     guard let value = Int(port) else { localError = "請填寫有效的接收連接埠。"; return }
                     draft.port = value

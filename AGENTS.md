@@ -49,6 +49,7 @@ These are compatibility identifiers, not forgotten branding. Changing them witho
 
 ## Implementation constraints
 
+- Use GlassSwitchStyle for every visible toggle. This user-approved custom style uses native glass materials with app-defined geometry; do not describe it as the standard macOS switch. Preserve its on, off, disabled, reduced-motion, keyboard, and accessibility behavior.
 - Preserve the approved macOS 27 native design, including disabled states. Obtain user approval before materially changing layout or interaction patterns.
 - Keep source IP restrictions, per-printer filesystem roots, exclusive file creation, and overwrite protection.
 - Do not enable downloads, existing-file deletion, renaming, append/resume, foreign-host data connections, or privileged data ports to work around compatibility issues.
